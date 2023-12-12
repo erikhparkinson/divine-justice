@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "name": "Divine Justice",
+  "avatar": "GjbgS1yamgQOIeeaa",
+  "preferredColor": "vermilion",
+  "language": "python.3",
+  "game": "table-tennis",
+  "run": "python3 -u ./main.py"
+}

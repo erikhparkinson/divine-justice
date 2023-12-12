@@ -1,0 +1,89 @@
+set -e
+
+origin="https://www.zilch.dev"
+for var in "$@"
+do
+    case $var in
+      "--origin"*)
+        origin="${var:9}"
+        break
+        ;;
+    esac
+done
+
+system="linux"
+if [ "$(uname -s)" = "Darwin" ]; then
+    system="macos"
+fi
+
+arch=$(uname -m)
+case $arch in
+  "x86_64"*)
+    arch="x64"
+    ;;
+  "aarch64")
+    arch="arm64"
+    ;;
+  "arm64")
+    arch="arm64"
+    ;;
+  *)
+    arch="unknown"
+    ;;
+esac
+
+if [ "$arch" = "unknown" ]; then
+  echo "Unsupported architecture: $(uname -m)"
+  echo "Sorry about that! Please report this error to https://github.com/zilch/hello/issues/new"
+  exit 1
+fi
+
+version_check_url="$origin/zilch-connect/$system-$arch"
+
+echo "⏱️  Initializing"
+
+if which curl >/dev/null ; then
+    version_check_response=$(curl --silent --show-error --fail "$version_check_url")
+elif which wget >/dev/null ; then
+    version_check_response=$(wget -q -O - "$version_check_url")
+    if [ "$version_check_response" = "" ]; then
+      echo "Unable to determine latest version."
+      exit 1
+    fi
+else
+    echo "Either curl or wget must be available."
+    exit 1
+fi
+
+chunks=$( echo $version_check_response | cut -d ' ' -f 1 )
+latest_version=$( echo $version_check_response | cut -d ' ' -f 2 )
+
+zilch_connect_dir="$HOME/.zilch/zilch-connect"
+zilch_connect="$zilch_connect_dir/$latest_version"
+
+if ! test -f "$zilch_connect"; then
+    echo "🌐 Updating"
+    
+    rm -rf "$zilch_connect_dir"
+    mkdir -p "$zilch_connect_dir"
+
+    download_url="$origin/zilch-connect/$latest_version"
+
+    for ((i=0; i<$chunks; i++));
+    do
+      if which curl >/dev/null ; then
+          curl --silent --show-error --fail "$download_url.$i" -o "$zilch_connect.$i"
+      else
+          wget -q "$download_url.$i" -O "$zilch_connect.$i"
+      fi
+    done
+
+    cat $zilch_connect.* > "$zilch_connect"
+    rm $zilch_connect.*
+
+    chmod +x "$zilch_connect"
+
+    echo "✅ Update complete"
+fi
+
+$zilch_connect "$@"

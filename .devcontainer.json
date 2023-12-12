@@ -1,0 +1,12 @@
+{
+  "name": "Zilch Bot",
+  "postAttachCommand": "./connect --welcome",
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["bot.py"]
+    },
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  }
+}
